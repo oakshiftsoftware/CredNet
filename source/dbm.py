@@ -28,6 +28,31 @@ class Database:
         create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns_str})"
         self.cursor.execute(create_table_query)
         self.conn.commit()
+    
+    def insert_record(self, table_name: str, record: dict):
+        if self.conn is None:
+            raise Exception("Database connection is not established.")
+        
+        columns_str = ", ".join(record.keys())
+        placeholders_str = ", ".join(["?" for _ in record])
+        insert_query = f"INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders_str})"
+        self.cursor.execute(insert_query, tuple(record.values()))
+        self.conn.commit()
+    
+    def fetch_records(self, table_name: str, conditions: dict = None):
+        if self.conn is None:
+            raise Exception("Database connection is not established.")
+        
+        query = f"SELECT * FROM {table_name}"
+        if conditions:
+            # Example: conditions = {"column1": "value1", "column2": "value2"}
+            conditions_str = " AND ".join([f"{col} = ?" for col in conditions.keys()])
+            query += f" WHERE {conditions_str}"
+            self.cursor.execute(query, tuple(conditions.values()))
+        else:
+            self.cursor.execute(query)
+        
+        return self.cursor.fetchall()
 
 
 class DatabaseManager:
